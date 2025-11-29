@@ -26,10 +26,10 @@ export class ParticleSystem {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     const material = new THREE.PointsMaterial({
-      color: 0x4488ff,
+      color: 0x888888,
       size: 0.03,
       transparent: true,
-      opacity: 0.6,
+      opacity: 0.4,
       sizeAttenuation: true
     });
 
