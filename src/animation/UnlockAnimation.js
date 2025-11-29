@@ -6,12 +6,20 @@ export class UnlockAnimation {
   constructor(cube) {
     this.cube = cube;
     this.isAnimating = false;
+    this.savedState = []; // Store positions/rotations before animation
   }
 
   // Play the unlock animation for a solved face
   play(face) {
     if (this.isAnimating) return;
     this.isAnimating = true;
+
+    // Save current state of ALL cubies before animating
+    this.savedState = this.cube.cubies.map(cubie => ({
+      cubie,
+      position: cubie.mesh.position.clone(),
+      rotation: cubie.mesh.rotation.clone()
+    }));
 
     const faceCubies = this.getCubiesOnFace(face);
     const faceCenter = this.getFaceCenter(face);
@@ -158,21 +166,20 @@ export class UnlockAnimation {
   }
 
   resetCubePositions() {
-    this.cube.cubies.forEach(cubie => {
-      const offset = 1.05; // CUBIE_SIZE + gap
-
+    // Restore each cubie to its saved state
+    this.savedState.forEach(({ cubie, position, rotation }) => {
       gsap.to(cubie.mesh.position, {
-        x: cubie.x * offset,
-        y: cubie.y * offset,
-        z: cubie.z * offset,
+        x: position.x,
+        y: position.y,
+        z: position.z,
         duration: 0.4,
         ease: "power2.out"
       });
 
       gsap.to(cubie.mesh.rotation, {
-        x: 0,
-        y: 0,
-        z: 0,
+        x: rotation.x,
+        y: rotation.y,
+        z: rotation.z,
         duration: 0.4,
         ease: "power2.out"
       });
@@ -186,5 +193,8 @@ export class UnlockAnimation {
         }
       });
     });
+
+    // Clear saved state
+    this.savedState = [];
   }
 }
