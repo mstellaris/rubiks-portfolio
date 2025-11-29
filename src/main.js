@@ -50,6 +50,19 @@ setupKeyboardControls(cube);
 // Setup drag controls
 const dragControls = new DragControls(cube, camera, canvas, controls);
 
+// Face solved callback
+cube.onFaceSolved = (face) => {
+  console.log(`Face ${face} was solved! Trigger animation here.`);
+  // We'll add the unlock animation in Phase 5
+};
+
+// Scramble with spacebar
+document.addEventListener('keydown', (e) => {
+  if (e.key === ' ') { // Spacebar
+    cube.scramble(25);
+  }
+});
+
 // Handle resize
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import gsap from 'gsap';
 import { Cubie } from './Cubie.js';
 import { MoveQueue } from '../animation/MoveQueue.js';
+import { SolveDetector } from '../detection/SolveDetector.js';
 
 export class Cube {
   constructor(scene) {
@@ -18,6 +19,10 @@ export class Cube {
 
     // Create the cube
     this.createCubies();
+
+    // Solve detection
+    this.solveDetector = new SolveDetector(this);
+    this.onFaceSolved = null; // Callback for when a face is solved
   }
 
   createCubies() {
@@ -115,7 +120,40 @@ export class Cube {
       cubie.x = Math.round(cubie.x);
       cubie.y = Math.round(cubie.y);
       cubie.z = Math.round(cubie.z);
+
+      // Update face colors
+      cubie.rotateFaceColors(axis, direction);
     });
+
+    // Check for solved faces after each move
+    this.checkSolvedFaces();
+  }
+
+  checkSolvedFaces() {
+    const newlySolved = this.solveDetector.checkAllFaces();
+
+    for (const face of newlySolved) {
+      console.log(`Face solved: ${face}!`);
+
+      if (this.onFaceSolved) {
+        this.onFaceSolved(face);
+      }
+    }
+  }
+
+  // Scramble the cube with random moves
+  async scramble(moveCount = 20) {
+    const axes = ['x', 'y', 'z'];
+    const layers = [-1, 0, 1];
+    const directions = [1, -1];
+
+    for (let i = 0; i < moveCount; i++) {
+      const axis = axes[Math.floor(Math.random() * axes.length)];
+      const layer = layers[Math.floor(Math.random() * layers.length)];
+      const direction = directions[Math.floor(Math.random() * directions.length)];
+
+      await this.rotate(axis, layer, direction);
+    }
   }
 
   // Add cube to a Three.js scene
