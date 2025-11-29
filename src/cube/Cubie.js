@@ -115,6 +115,12 @@ export class Cubie {
 
   createFaceMaterial(colorName) {
     const color = colorName ? COLORS[colorName] : 0x111111;
-    return new THREE.MeshStandardMaterial({ color });
+    return new THREE.MeshStandardMaterial({
+      color,
+      emissive: color,
+      emissiveIntensity: 0,
+      roughness: 0.3,
+      metalness: 0.1
+    });
   }
 }

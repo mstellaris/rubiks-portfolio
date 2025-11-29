@@ -1,8 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { Cube } from './cube/Cube.js';
 import { setupKeyboardControls } from './controls/KeyboardControls.js';
 import { DragControls } from './controls/DragControls.js';
+import { UnlockAnimation } from './animation/UnlockAnimation.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -34,6 +38,18 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+// Post-processing with bloom
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  0.5,   // Strength
+  0.4,   // Radius
+  0.85   // Threshold
+);
+composer.addPass(bloomPass);
+
 // Controls
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
@@ -44,16 +60,19 @@ controls.enablePan = false; // Disable panning, only rotation
 const cube = new Cube(scene);
 cube.addToScene(scene);
 
+// Unlock animation
+const unlockAnimation = new UnlockAnimation(cube);
+
 // Setup keyboard controls
 setupKeyboardControls(cube);
 
 // Setup drag controls
 const dragControls = new DragControls(cube, camera, canvas, controls);
 
-// Face solved callback
+// Face solved callback - trigger unlock animation
 cube.onFaceSolved = (face) => {
-  console.log(`Face ${face} was solved! Trigger animation here.`);
-  // We'll add the unlock animation in Phase 5
+  console.log(`Face ${face} was solved!`);
+  unlockAnimation.play(face);
 };
 
 // Scramble with spacebar
@@ -68,13 +87,14 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
-  renderer.render(scene, camera);
+  composer.render(); // Use composer instead of renderer
 }
 
 animate();
