@@ -12,7 +12,7 @@ import { ParticleSystem } from './effects/Particles.js';
 
 // Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0a0a);
+scene.background = new THREE.Color(0x1a1d24);
 
 // Lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
