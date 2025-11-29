@@ -141,6 +141,39 @@ export class Cube {
     }
   }
 
+  // Reset cube to solved state
+  reset() {
+    const offset = 1.05; // CUBIE_SIZE + gap
+
+    this.cubies.forEach(cubie => {
+      // Reset logical position to home
+      cubie.x = cubie.homeX;
+      cubie.y = cubie.homeY;
+      cubie.z = cubie.homeZ;
+
+      // Reset face colors
+      cubie.faceColors = {
+        right:  cubie.homeX === 1 ? 'red' : null,
+        left:   cubie.homeX === -1 ? 'orange' : null,
+        up:     cubie.homeY === 1 ? 'white' : null,
+        down:   cubie.homeY === -1 ? 'yellow' : null,
+        front:  cubie.homeZ === 1 ? 'green' : null,
+        back:   cubie.homeZ === -1 ? 'blue' : null
+      };
+
+      // Reset mesh position and rotation
+      cubie.mesh.position.set(
+        cubie.homeX * offset,
+        cubie.homeY * offset,
+        cubie.homeZ * offset
+      );
+      cubie.mesh.rotation.set(0, 0, 0);
+    });
+
+    // Reset solve detector state
+    this.solveDetector.solvedFaces.clear();
+  }
+
   // Scramble the cube with random moves
   async scramble(moveCount = 20) {
     const axes = ['x', 'y', 'z'];

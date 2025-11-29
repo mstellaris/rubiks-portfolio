@@ -41,10 +41,26 @@ export function setupKeyboardControls(cube) {
       case 's': // Standing layer (between F and B)
         cube.rotate('z', 0, dir);
         break;
+
+      // Debug keys
+      case '`': // Backtick = reset to solved state
+        cube.reset();
+        console.log('Cube reset to solved state');
+        break;
+      case '1': // Quick scramble (3 moves) for easy testing
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          cube.rotate('x', 1, 1);
+          cube.rotate('y', 1, 1);
+          cube.rotate('z', 1, 1);
+          console.log('Quick scramble: R U F');
+        }
+        break;
     }
   });
 
   console.log('Keyboard controls active:');
   console.log('R/L/U/D/F/B = rotate faces');
   console.log('Hold Shift for counter-clockwise');
+  console.log('` = reset to solved | Ctrl+1 = quick scramble');
 }

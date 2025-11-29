@@ -9,6 +9,11 @@ export class Cubie {
     this.y = y;
     this.z = z;
 
+    // Store home position for reset
+    this.homeX = x;
+    this.homeY = y;
+    this.homeZ = z;
+
     // Track which color is on which face of THIS cubie
     // Key = face direction, Value = color name
     this.faceColors = this.initializeFaceColors();
