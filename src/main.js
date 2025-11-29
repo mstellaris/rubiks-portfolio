@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Cube } from './cube/Cube.js';
 import { setupKeyboardControls } from './controls/KeyboardControls.js';
+import { DragControls } from './controls/DragControls.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -45,6 +46,9 @@ cube.addToScene(scene);
 
 // Setup keyboard controls
 setupKeyboardControls(cube);
+
+// Setup drag controls
+const dragControls = new DragControls(cube, camera, canvas, controls);
 
 // Handle resize
 window.addEventListener('resize', () => {
