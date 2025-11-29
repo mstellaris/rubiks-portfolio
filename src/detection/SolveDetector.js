@@ -1,7 +1,8 @@
 export class SolveDetector {
   constructor(cube) {
     this.cube = cube;
-    this.solvedFaces = new Set();
+    // Initialize with all faces solved (cube starts in solved state)
+    this.solvedFaces = new Set(['right', 'left', 'up', 'down', 'front', 'back']);
   }
 
   // Check all faces and return newly solved ones

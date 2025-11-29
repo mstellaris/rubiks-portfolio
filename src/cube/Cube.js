@@ -23,6 +23,7 @@ export class Cube {
     // Solve detection
     this.solveDetector = new SolveDetector(this);
     this.onFaceSolved = null; // Callback for when a face is solved
+    this.isScrambling = false; // Flag to disable detection during scramble
   }
 
   createCubies() {
@@ -130,6 +131,9 @@ export class Cube {
   }
 
   checkSolvedFaces() {
+    // Skip detection during scrambling
+    if (this.isScrambling) return;
+
     const newlySolved = this.solveDetector.checkAllFaces();
 
     for (const face of newlySolved) {
@@ -170,12 +174,14 @@ export class Cube {
       cubie.mesh.rotation.set(0, 0, 0);
     });
 
-    // Reset solve detector state
-    this.solveDetector.solvedFaces.clear();
+    // Reset solve detector state (all faces solved after reset)
+    this.solveDetector.solvedFaces = new Set(['right', 'left', 'up', 'down', 'front', 'back']);
   }
 
   // Scramble the cube with random moves
   async scramble(moveCount = 20) {
+    this.isScrambling = true;
+
     const axes = ['x', 'y', 'z'];
     const layers = [-1, 0, 1];
     const directions = [1, -1];
@@ -187,6 +193,13 @@ export class Cube {
 
       await this.rotate(axis, layer, direction);
     }
+
+    this.isScrambling = false;
+
+    // Update solve detector to current state (no faces should be solved after scramble)
+    this.solveDetector.solvedFaces.clear();
+    // Re-check to properly initialize which faces happen to be solved
+    this.solveDetector.checkAllFaces();
   }
 
   // Add cube to a Three.js scene
