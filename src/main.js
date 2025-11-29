@@ -96,12 +96,37 @@ cube.onFaceSolved = (face) => {
   unlockAnimation.play(face);
 };
 
+// UI Elements
+const scrambleBtn = document.getElementById('scramble-btn');
+const backBtn = document.getElementById('back-btn');
+const sectionOverlay = document.getElementById('section-overlay');
+
+// Scramble button
+scrambleBtn?.addEventListener('click', () => {
+  cube.scramble(25);
+});
+
+// Back button (close section overlay)
+backBtn?.addEventListener('click', () => {
+  sectionOverlay?.classList.add('hidden');
+});
+
 // Scramble with spacebar
 document.addEventListener('keydown', (e) => {
-  if (e.key === ' ') { // Spacebar
+  if (e.key === ' ' && !e.target.closest('button')) { // Spacebar (not on button)
+    e.preventDefault();
     cube.scramble(25);
   }
+  // Escape to close overlay
+  if (e.key === 'Escape') {
+    sectionOverlay?.classList.add('hidden');
+  }
 });
+
+// Initial scramble on load (after a short delay)
+setTimeout(() => {
+  cube.scramble(20);
+}, 500);
 
 // Handle resize
 window.addEventListener('resize', () => {

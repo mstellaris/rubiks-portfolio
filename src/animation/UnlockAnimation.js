@@ -156,13 +156,22 @@ export class UnlockAnimation {
 
   navigateToSection(section) {
     console.log(`Navigating to: ${section.name} (${section.path})`);
-    // For now, just log it
-    // Later: window.location.href = section.path;
 
-    // Reset the cube after animation (for demo purposes)
+    // Show section overlay
+    const overlay = document.getElementById('section-overlay');
+    const title = document.getElementById('section-title');
+    const description = document.getElementById('section-description');
+
+    if (overlay && title && description) {
+      title.textContent = section.name;
+      description.textContent = `Welcome to the ${section.name} section. This is where your ${section.name.toLowerCase()} content would go.`;
+      overlay.classList.remove('hidden');
+    }
+
+    // Reset cube positions (but keep overlay visible)
     setTimeout(() => {
       this.resetCubePositions();
-    }, 500);
+    }, 300);
   }
 
   resetCubePositions() {

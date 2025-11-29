@@ -7,10 +7,155 @@
 body {
   overflow: hidden;
   background: #0a0a0a;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 #cube-canvas {
   display: block;
   width: 100vw;
   height: 100vh;
+}
+
+/* UI Overlay */
+.ui-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2rem;
+}
+
+.instructions {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.color-dot.white { background: #ffffff; color: #ffffff; }
+.color-dot.yellow { background: #ffff00; color: #ffff00; }
+.color-dot.green { background: #00ff00; color: #00ff00; }
+.color-dot.blue { background: #0066ff; color: #0066ff; }
+.color-dot.red { background: #ff0000; color: #ff0000; }
+.color-dot.orange { background: #ff8800; color: #ff8800; }
+
+/* Buttons */
+.ui-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 400;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.ui-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+/* Section Overlay */
+.section-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 10, 10, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  z-index: 100;
+}
+
+.section-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.section-content {
+  text-align: center;
+  color: white;
+  max-width: 600px;
+  padding: 2rem;
+}
+
+.section-content h1 {
+  font-size: 3rem;
+  font-weight: 300;
+  margin-bottom: 1rem;
+  letter-spacing: 0.1em;
+}
+
+.section-content p {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.section-content .ui-button {
+  position: static;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .legend {
+    gap: 1rem;
+  }
+
+  .legend-item {
+    font-size: 0.75rem;
+  }
+
+  .instructions {
+    font-size: 0.8rem;
+  }
+
+  .ui-button {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.8rem;
+  }
 }
