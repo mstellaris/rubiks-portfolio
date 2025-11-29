@@ -39,13 +39,13 @@ public/
 
 ## Development Phases
 
-- [ ] **Phase 1**: Static cube rendering (27 cubies, 6 colors, OrbitControls)
-- [ ] **Phase 2**: Face rotation mechanics (keyboard R/L/U/D/F/B, GSAP animations)
-- [ ] **Phase 3**: Mouse/drag interaction (raycasting, gesture detection)
-- [ ] **Phase 4**: Solve detection (track face colors, detect when 9 match)
-- [ ] **Phase 5**: Unlock animation (glow, expand outward, bloom effect)
-- [ ] **Phase 6**: Visual polish (PBR materials, HDR environment, particles)
-- [ ] **Phase 7**: Website integration (navigation, UI overlay)
+- [x] **Phase 1**: Static cube rendering (27 cubies, 6 colors, OrbitControls)
+- [x] **Phase 2**: Face rotation mechanics (keyboard R/L/U/D/F/B, GSAP animations)
+- [x] **Phase 3**: Mouse/drag interaction (raycasting, gesture detection)
+- [x] **Phase 4**: Solve detection (track face colors, detect when 9 match)
+- [x] **Phase 5**: Unlock animation (glow, expand outward, bloom effect)
+- [x] **Phase 6**: Visual polish (PBR materials, HDR environment, particles)
+- [x] **Phase 7**: Website integration (navigation, UI overlay)
 
 ## Key Patterns
 
