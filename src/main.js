@@ -12,9 +12,11 @@ import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
 import { inject } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
-// Initialize Vercel Analytics
+// Initialize Vercel Analytics & Speed Insights
 inject();
+injectSpeedInsights();
 
 // Scene
 const scene = new THREE.Scene();
