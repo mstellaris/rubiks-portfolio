@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { Cube } from './cube/Cube.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -12,7 +13,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(4, 3, 5);
+camera.position.set(5, 4, 6);
 
 // Renderer
 const canvas = document.getElementById('cube-canvas');
@@ -27,12 +28,11 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
+controls.enablePan = false; // Disable panning, only rotation
 
-// Test cube (temporary)
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-const testCube = new THREE.Mesh(geometry, material);
-scene.add(testCube);
+// Create the Rubik's cube
+const cube = new Cube();
+cube.addToScene(scene);
 
 // Handle resize
 window.addEventListener('resize', () => {
@@ -49,3 +49,6 @@ function animate() {
 }
 
 animate();
+
+// Expose for debugging
+window.cube = cube;
