@@ -11,6 +11,10 @@ import { UnlockAnimation } from './animation/UnlockAnimation.js';
 import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 // Scene
 const scene = new THREE.Scene();
