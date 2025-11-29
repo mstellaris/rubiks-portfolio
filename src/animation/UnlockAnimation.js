@@ -13,11 +13,8 @@ export class UnlockAnimation {
 
   // Play the unlock animation for a solved face
   play(face) {
-    console.log(`[UnlockAnimation] play() called for face: ${face}, isAnimating: ${this.isAnimating}`);
-
     // If already animating, queue this face for later
     if (this.isAnimating) {
-      console.log(`[UnlockAnimation] Queueing face: ${face}`);
       this.animationQueue.push({ face, onComplete: this.onComplete });
       this.onComplete = null; // Clear so it doesn't get overwritten
       return;
@@ -182,7 +179,6 @@ export class UnlockAnimation {
     if (this.animationQueue.length === 0) return;
 
     const next = this.animationQueue.shift();
-    console.log(`[UnlockAnimation] Processing queued face: ${next.face}`);
 
     // Set the callback for the next animation
     this.onComplete = next.onComplete;
