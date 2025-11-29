@@ -1,11 +1,11 @@
 # Rubik's Cube Portfolio
 
-Interactive 3D Rubik's cube as a portfolio navigation system. Solving a face triggers a sci-fi explosion animation and navigates to that section.
+Interactive 3D Rubik's cube as a portfolio navigation system. Solving a face triggers an unlock animation, then a vine-like line extends outward with a clickable button to navigate to that section.
 
 ## Tech Stack
 
-- **Three.js** - 3D rendering
-- **GSAP** - animations
+- **Three.js** - 3D rendering with post-processing (UnrealBloomPass)
+- **GSAP** - animations (timelines, easing)
 - **Vite** - build tool/dev server
 - **Vanilla JS** - no React
 
@@ -14,70 +14,86 @@ Interactive 3D Rubik's cube as a portfolio navigation system. Solving a face tri
 ```
 src/
 ├── main.js              # Entry point, scene setup, render loop
-├── index.html
 ├── style.css
 ├── cube/
-│   ├── Cube.js          # Main cube class, orchestrates everything
-│   ├── Cubie.js         # Individual cubie with position and mesh
-│   └── (future: CubeState.js, CubeMaterials.js)
+│   ├── Cube.js          # Main cube class, move queue, solve detection
+│   └── Cubie.js         # Individual cubie with position, mesh, face colors
 ├── controls/
-│   ├── KeyboardControls.js
-│   ├── DragControls.js
-│   └── Raycaster.js
+│   ├── KeyboardControls.js  # R/L/U/D/F/B keys + debug keys
+│   ├── DragControls.js      # Mouse drag rotation
+│   └── Raycaster.js         # Face/cubie detection
 ├── animation/
-│   ├── MoveQueue.js     # Queue sequential moves
-│   └── UnlockAnimation.js
+│   ├── MoveQueue.js         # Queue sequential moves
+│   └── UnlockAnimation.js   # Solved face animation with queue system
 ├── detection/
-│   └── SolveDetector.js
+│   └── SolveDetector.js     # Detects when faces are solved
 ├── effects/
-│   └── Particles.js
+│   ├── Particles.js         # Ambient floating particles
+│   └── FaceLink.js          # Vine-like lines + buttons for solved faces
 └── utils/
-    └── constants.js     # Face colors, axis mappings, sections
+    └── constants.js         # Colors, sections, cubie size
 public/
-└── hdri/                # Environment maps (.hdr files)
+└── hdri/
+    └── studio.hdr           # Environment map for reflections
 ```
 
-## Development Phases
+## Current State
 
-- [x] **Phase 1**: Static cube rendering (27 cubies, 6 colors, OrbitControls)
-- [x] **Phase 2**: Face rotation mechanics (keyboard R/L/U/D/F/B, GSAP animations)
-- [x] **Phase 3**: Mouse/drag interaction (raycasting, gesture detection)
-- [x] **Phase 4**: Solve detection (track face colors, detect when 9 match)
-- [x] **Phase 5**: Unlock animation (glow, expand outward, bloom effect)
-- [x] **Phase 6**: Visual polish (PBR materials, HDR environment, particles)
-- [x] **Phase 7**: Website integration (navigation, UI overlay)
+All 7 development phases complete. The cube is fully functional:
+- Keyboard and mouse controls for face rotation
+- Solve detection triggers unlock animation
+- Vine-like line grows from solved face with clickable section button
+- Animation queue handles multiple faces solved in quick succession
 
-## Key Patterns
+## Key Implementation Details
 
-### Face Rotation
-Uses temporary THREE.Group pivot pattern:
-1. Filter cubies on layer
-2. Attach to pivot group
+### Face Rotation (Pivot Pattern)
+1. Filter cubies on layer by axis/position
+2. Attach to temporary THREE.Group pivot
 3. Animate pivot rotation with GSAP
 4. Return cubies to scene with `attach()` (preserves world transform)
-5. Update logical positions
-
-### Coordinate System
-- Cubies use -1, 0, 1 coordinates on each axis
-- Face colors: white (Y+), yellow (Y-), green (Z+), blue (Z-), red (X+), orange (X-)
+5. Update logical positions and face colors
 
 ### Solve Detection
-- Track which color faces which direction on each cubie
-- After rotation, update face colors with `rotateFaceColors()`
-- Compare all 9 cubies on a face to center piece color
+- Each cubie tracks which color faces which direction (`faceColors` object)
+- After rotation, `rotateFaceColors()` updates the mapping
+- `SolveDetector.checkAllFaces()` returns newly solved faces
+- Tracks `solvedFaces` Set to only trigger on state change
+
+### Animation Queue (UnlockAnimation)
+- `isAnimating` flag prevents concurrent animations
+- `animationQueue` array holds pending face animations
+- `processQueue()` plays next animation after current completes
+- Each animation stores its own `onComplete` callback
+
+### FaceLink (Vine Animation)
+- Quadratic bezier curve for organic path
+- 50-segment line geometry animated point-by-point
+- Slight wobble during growth, settles when complete
+- Viewport clamping keeps endpoint on screen
+- Button positioned via 3D-to-2D projection
+
+### Visual Settings
+- Background: #252a33 (medium dark gray)
+- Ambient light: 0.4 intensity
+- Directional light: 0.4 intensity
+- Tone mapping: ACESFilmic at 0.7 exposure
+- Bloom: 0.5 strength, 0.4 radius, 0.85 threshold
+- Materials: MeshPhysicalMaterial with clearcoat 0.3, envMapIntensity 0.5
+
+## Debug Keys
+
+- **Backtick (`)** - Reset cube to solved state
+- **Ctrl+1** - Quick scramble (5 moves)
+- **Spacebar** - Full scramble (25 moves)
 
 ## Commands
 
 ```bash
-npm run dev      # Start dev server
+npm run dev      # Start dev server (http://localhost:5173)
 npm run build    # Production build
 npm run preview  # Preview production build
 ```
-
-## Reference Docs
-
-- `rubiks_cube_research.md` - Framework comparison, architecture decisions, code patterns
-- `rubiks-cube-implementation-guide.md` - Step-by-step implementation with complete code examples
 
 ## Face-to-Section Mapping
 
@@ -89,3 +105,15 @@ npm run preview  # Preview production build
 | Blue   | Back  | Skills     |
 | Red    | Right | Contact    |
 | Orange | Left  | Blog       |
+
+## Bugs Fixed
+
+1. **Animation during scramble** - Added `isScrambling` flag, initialize `solvedFaces` with all 6 faces
+2. **Black faces after animation** - Save and restore mesh rotation, not just position
+3. **Cubie misalignment** - Use clean calculated positions from logical coords, not saved positions with float drift
+4. **Missed face animations** - Added animation queue system
+
+## Reference Docs
+
+- `rubiks_cube_research.md` - Framework comparison, architecture decisions
+- `rubiks-cube-implementation-guide.md` - Step-by-step implementation guide
