@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { CUBIE_SIZE, COLORS } from '../utils/constants.js';
 
 export class Cubie {
@@ -21,21 +22,23 @@ export class Cubie {
   }
 
   createMesh() {
-    const geometry = new THREE.BoxGeometry(
+    const geometry = new RoundedBoxGeometry(
       CUBIE_SIZE,
       CUBIE_SIZE,
-      CUBIE_SIZE
+      CUBIE_SIZE,
+      4,      // segments (smoothness)
+      0.08    // radius of rounded edges
     );
 
     // Create materials for each face
     // Order: +X, -X, +Y, -Y, +Z, -Z (right, left, up, down, front, back)
     const materials = [
-      new THREE.MeshBasicMaterial({ color: this.getFaceColor('x', 1) }),   // Right
-      new THREE.MeshBasicMaterial({ color: this.getFaceColor('x', -1) }),  // Left
-      new THREE.MeshBasicMaterial({ color: this.getFaceColor('y', 1) }),   // Up
-      new THREE.MeshBasicMaterial({ color: this.getFaceColor('y', -1) }),  // Down
-      new THREE.MeshBasicMaterial({ color: this.getFaceColor('z', 1) }),   // Front
-      new THREE.MeshBasicMaterial({ color: this.getFaceColor('z', -1) })   // Back
+      new THREE.MeshStandardMaterial({ color: this.getFaceColor('x', 1) }),   // Right
+      new THREE.MeshStandardMaterial({ color: this.getFaceColor('x', -1) }),  // Left
+      new THREE.MeshStandardMaterial({ color: this.getFaceColor('y', 1) }),   // Up
+      new THREE.MeshStandardMaterial({ color: this.getFaceColor('y', -1) }),  // Down
+      new THREE.MeshStandardMaterial({ color: this.getFaceColor('z', 1) }),   // Front
+      new THREE.MeshStandardMaterial({ color: this.getFaceColor('z', -1) })   // Back
     ];
 
     return new THREE.Mesh(geometry, materials);
