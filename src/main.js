@@ -3,10 +3,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { Cube } from './cube/Cube.js';
 import { setupKeyboardControls } from './controls/KeyboardControls.js';
 import { DragControls } from './controls/DragControls.js';
 import { UnlockAnimation } from './animation/UnlockAnimation.js';
+import { ParticleSystem } from './effects/Particles.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -19,6 +21,20 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
 directionalLight.position.set(5, 10, 7);
 scene.add(directionalLight);
+
+// Load HDR environment map (optional - falls back gracefully)
+const rgbeLoader = new RGBELoader();
+rgbeLoader.load('/hdri/studio.hdr',
+  (texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.environment = texture;
+    console.log('HDR environment loaded');
+  },
+  undefined,
+  () => {
+    console.log('No HDR found - using default lighting');
+  }
+);
 
 // Camera
 const camera = new THREE.PerspectiveCamera(
@@ -37,6 +53,8 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1;
 
 // Post-processing with bloom
 const composer = new EffectComposer(renderer);
@@ -59,6 +77,9 @@ controls.enablePan = false; // Disable panning, only rotation
 // Create the Rubik's cube
 const cube = new Cube(scene);
 cube.addToScene(scene);
+
+// Particle system
+const particles = new ParticleSystem(scene);
 
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
@@ -90,11 +111,22 @@ window.addEventListener('resize', () => {
   composer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Animation loop
+// Animation loop with idle animation
+let time = 0;
+
 function animate() {
   requestAnimationFrame(animate);
+
+  time += 0.01;
+
+  // Subtle floating motion
+  cube.group.position.y = Math.sin(time) * 0.05;
+
+  // Update particles
+  particles.update(time);
+
   controls.update();
-  composer.render(); // Use composer instead of renderer
+  composer.render();
 }
 
 animate();
