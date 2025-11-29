@@ -119,11 +119,12 @@ export class Cubie {
       color,
       emissive: color,
       emissiveIntensity: 0,
-      roughness: 0.15,
+      roughness: 0.3,
       metalness: 0,
-      clearcoat: 0.4,
-      clearcoatRoughness: 0.1,
-      reflectivity: 0.5
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.2,
+      reflectivity: 0.3,
+      envMapIntensity: 0.5
     });
   }
 }
