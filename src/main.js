@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { Cube } from './cube/Cube.js';
+import { setupKeyboardControls } from './controls/KeyboardControls.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -39,8 +40,11 @@ controls.dampingFactor = 0.05;
 controls.enablePan = false; // Disable panning, only rotation
 
 // Create the Rubik's cube
-const cube = new Cube();
+const cube = new Cube(scene);
 cube.addToScene(scene);
+
+// Setup keyboard controls
+setupKeyboardControls(cube);
 
 // Handle resize
 window.addEventListener('resize', () => {
