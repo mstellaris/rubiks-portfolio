@@ -9,6 +9,8 @@ import { setupKeyboardControls } from './controls/KeyboardControls.js';
 import { DragControls } from './controls/DragControls.js';
 import { UnlockAnimation } from './animation/UnlockAnimation.js';
 import { ParticleSystem } from './effects/Particles.js';
+import { FaceLink } from './effects/FaceLink.js';
+import { SECTIONS } from './utils/constants.js';
 
 // Scene
 const scene = new THREE.Scene();
@@ -81,6 +83,9 @@ cube.addToScene(scene);
 // Particle system
 const particles = new ParticleSystem(scene);
 
+// Face link system (lines + buttons for solved faces)
+const faceLink = new FaceLink(scene, camera, cube);
+
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
 
@@ -90,9 +95,29 @@ setupKeyboardControls(cube);
 // Setup drag controls
 const dragControls = new DragControls(cube, camera, canvas, controls);
 
-// Face solved callback - trigger unlock animation
+// Helper to get section from face color
+function getSectionForFace(face) {
+  const faceColors = {
+    right: 'red',
+    left: 'orange',
+    up: 'white',
+    down: 'yellow',
+    front: 'green',
+    back: 'blue'
+  };
+  return SECTIONS[faceColors[face]];
+}
+
+// Face solved callback - trigger unlock animation, then show face link
 cube.onFaceSolved = (face) => {
   console.log(`Face ${face} was solved!`);
+  const section = getSectionForFace(face);
+
+  // Set callback for when animation completes
+  unlockAnimation.onComplete = () => {
+    faceLink.show(face, section);
+  };
+
   unlockAnimation.play(face);
 };
 
@@ -103,6 +128,7 @@ const sectionOverlay = document.getElementById('section-overlay');
 
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
+  faceLink.hideAll();
   cube.scramble(25);
 });
 
@@ -115,11 +141,13 @@ backBtn?.addEventListener('click', () => {
 document.addEventListener('keydown', (e) => {
   if (e.key === ' ' && !e.target.closest('button')) { // Spacebar (not on button)
     e.preventDefault();
+    faceLink.hideAll();
     cube.scramble(25);
   }
   // Escape to close overlay
   if (e.key === 'Escape') {
     sectionOverlay?.classList.add('hidden');
+    faceLink.hideAll();
   }
 });
 
@@ -149,6 +177,9 @@ function animate() {
 
   // Update particles
   particles.update(time);
+
+  // Update face links (lines follow cube)
+  faceLink.update();
 
   controls.update();
   composer.render();

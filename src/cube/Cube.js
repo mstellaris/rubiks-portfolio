@@ -136,8 +136,10 @@ export class Cube {
 
     const newlySolved = this.solveDetector.checkAllFaces();
 
+    console.log(`[Cube] checkSolvedFaces - newly solved: [${newlySolved.join(', ')}], currently tracked: [${[...this.solveDetector.solvedFaces].join(', ')}]`);
+
     for (const face of newlySolved) {
-      console.log(`Face solved: ${face}!`);
+      console.log(`[Cube] Triggering onFaceSolved for: ${face}`);
 
       if (this.onFaceSolved) {
         this.onFaceSolved(face);

@@ -7,11 +7,22 @@ export class UnlockAnimation {
     this.cube = cube;
     this.isAnimating = false;
     this.savedState = []; // Store positions/rotations before animation
+    this.onComplete = null; // Callback when animation finishes
+    this.animationQueue = []; // Queue for pending face animations
   }
 
   // Play the unlock animation for a solved face
   play(face) {
-    if (this.isAnimating) return;
+    console.log(`[UnlockAnimation] play() called for face: ${face}, isAnimating: ${this.isAnimating}`);
+
+    // If already animating, queue this face for later
+    if (this.isAnimating) {
+      console.log(`[UnlockAnimation] Queueing face: ${face}`);
+      this.animationQueue.push({ face, onComplete: this.onComplete });
+      this.onComplete = null; // Clear so it doesn't get overwritten
+      return;
+    }
+
     this.isAnimating = true;
 
     // Save current state of ALL cubies before animating
@@ -37,11 +48,23 @@ export class UnlockAnimation {
       return distA - distB;
     });
 
+    // Store callback for this specific animation
+    const currentCallback = this.onComplete;
+    this.onComplete = null;
+
     // Create GSAP timeline
     const tl = gsap.timeline({
       onComplete: () => {
         this.isAnimating = false;
-        this.navigateToSection(section);
+        this.resetCubePositions();
+
+        // Call the onComplete callback for this animation
+        if (currentCallback) {
+          currentCallback();
+        }
+
+        // Process next queued animation if any
+        this.processQueue();
       }
     });
 
@@ -154,24 +177,20 @@ export class UnlockAnimation {
     return mapping[face];
   }
 
-  navigateToSection(section) {
-    console.log(`Navigating to: ${section.name} (${section.path})`);
+  // Process the next animation in the queue
+  processQueue() {
+    if (this.animationQueue.length === 0) return;
 
-    // Show section overlay
-    const overlay = document.getElementById('section-overlay');
-    const title = document.getElementById('section-title');
-    const description = document.getElementById('section-description');
+    const next = this.animationQueue.shift();
+    console.log(`[UnlockAnimation] Processing queued face: ${next.face}`);
 
-    if (overlay && title && description) {
-      title.textContent = section.name;
-      description.textContent = `Welcome to the ${section.name} section. This is where your ${section.name.toLowerCase()} content would go.`;
-      overlay.classList.remove('hidden');
-    }
+    // Set the callback for the next animation
+    this.onComplete = next.onComplete;
 
-    // Reset cube positions (but keep overlay visible)
+    // Play the animation (with a small delay for visual separation)
     setTimeout(() => {
-      this.resetCubePositions();
-    }, 300);
+      this.play(next.face);
+    }, 200);
   }
 
   resetCubePositions() {
