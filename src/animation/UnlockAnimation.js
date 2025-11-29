@@ -175,14 +175,26 @@ export class UnlockAnimation {
   }
 
   resetCubePositions() {
-    // Restore each cubie to its saved state
-    this.savedState.forEach(({ cubie, position, rotation }) => {
+    const offset = 1.05; // CUBIE_SIZE + gap
+
+    // Restore each cubie using clean calculated positions
+    this.savedState.forEach(({ cubie, rotation }) => {
+      // Kill any existing tweens on this mesh
+      gsap.killTweensOf(cubie.mesh.position);
+      gsap.killTweensOf(cubie.mesh.rotation);
+
+      // Calculate clean position from logical coordinates
+      const cleanX = cubie.x * offset;
+      const cleanY = cubie.y * offset;
+      const cleanZ = cubie.z * offset;
+
       gsap.to(cubie.mesh.position, {
-        x: position.x,
-        y: position.y,
-        z: position.z,
+        x: cleanX,
+        y: cleanY,
+        z: cleanZ,
         duration: 0.4,
-        ease: "power2.out"
+        ease: "power2.out",
+        overwrite: true
       });
 
       gsap.to(cubie.mesh.rotation, {
@@ -190,7 +202,8 @@ export class UnlockAnimation {
         y: rotation.y,
         z: rotation.z,
         duration: 0.4,
-        ease: "power2.out"
+        ease: "power2.out",
+        overwrite: true
       });
 
       cubie.mesh.material.forEach(mat => {
