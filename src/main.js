@@ -64,17 +64,23 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.7;
 
-// Post-processing with bloom
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
+// Detect low-end devices — skip bloom to avoid frame drops
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isSmallViewport = (window.innerWidth * window.innerHeight) < 500000;
+const isLowEnd = isMobile && isSmallViewport;
 
-const bloomPass = new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.5,   // Strength
-  0.4,   // Radius
-  0.85   // Threshold
-);
-composer.addPass(bloomPass);
+let composer = null;
+if (!isLowEnd) {
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+  const bloomPass = new UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.5,   // Strength
+    0.4,   // Radius
+    0.85   // Threshold
+  );
+  composer.addPass(bloomPass);
+}
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
@@ -167,7 +173,7 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
+  if (composer) composer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // Animation loop with idle animation
@@ -188,7 +194,11 @@ function animate() {
   faceLink.update();
 
   controls.update();
-  composer.render();
+  if (composer) {
+    composer.render();
+  } else {
+    renderer.render(scene, camera);
+  }
 }
 
 animate();
