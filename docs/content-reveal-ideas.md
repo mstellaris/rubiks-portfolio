@@ -411,17 +411,48 @@ The overlay is defined in `index.html` as a centered `<div>` with a title, parag
 
 ## Experiment Plan
 
-Each idea will be implemented on a separate branch for comparison:
+Each idea was implemented on a separate branch for comparison. All branches deploy automatically to Vercel preview URLs when pushed.
 
-| Branch Name | Idea |
-|-------------|------|
-| `experiment/portal-face` | 1. Portal Through the Face |
-| `experiment/face-unfold` | 2. Face Unfold / Cube Net |
-| `experiment/dimensional-shift` | 3. Dimensional Shift |
-| `experiment/face-window` | 4. Face as Window + Parallax |
-| `experiment/vine-tree` | 5. Vine-to-Tree Growth |
-| `experiment/cubie-gallery` | 6. Cubies as Gallery |
-| `experiment/shader-dissolve` | 7. Shader Dissolve |
-| `experiment/split-screen` | 8. Split-Screen Hybrid |
-| `experiment/hologram` | 9. Holographic Projection |
-| `experiment/scroll-through` | 10. Scroll Through Cube |
+| Branch Name | Idea | Status | Key File |
+|-------------|------|--------|----------|
+| `experiment/portal-split` | 1+8. Portal + Split-Screen Combined | Implemented | `src/transition/PortalTransition.js` |
+| `experiment/face-unfold` | 2. Face Unfold / Cube Net | Implemented | `src/effects/FaceUnfold.js` |
+| `experiment/dimensional-shift` | 3. Dimensional Shift | Implemented | `src/effects/DimensionalShift.js` |
+| `experiment/face-window` | 4. Face as Window + Parallax | Implemented | `src/effects/FaceWindow.js` |
+| `experiment/vine-tree` | 5. Vine-to-Tree Growth | Implemented | `src/effects/BranchTree.js` |
+| `experiment/cubie-gallery` | 6. Cubies as Gallery | Implemented | `src/effects/CubieGallery.js` |
+| `experiment/shader-dissolve` | 7. Shader Dissolve | Implemented | `src/effects/DissolveTransition.js` |
+| `experiment/split-screen` | 8. Split-Screen Hybrid (standalone) | Implemented | `src/transition/SplitScreen.js` |
+| `experiment/hologram` | 9. Holographic Projection | Implemented | `src/effects/HologramProjection.js` |
+| `experiment/scroll-through` | 10. Scroll Through Cube | Implemented | `src/effects/ScrollThrough.js` |
+
+### Implementation Notes
+
+All experiments share a common pattern:
+- Override `faceLink.navigateTo()` to hook into the vine button click
+- Add new effect class with `enter`/`reverse` or `open`/`close` methods
+- Add `update()` call to render loop for per-frame effects
+- Guard scramble button to clean up active effects first
+- Build verified with `npm run build` before push
+
+### Experiment Summaries
+
+**Portal + Split-Screen (#1+#8):** Camera flies toward face, cubies fade transparent, canvas slides left 40%, content panel slides in from right 60%. Active vine bridges to panel edge. Full ViewState machine gates all interactions.
+
+**Face Unfold (#2):** 9 face cubies spread into a 3x3 grid with back.out easing, each displaying a CanvasTexture content card. Fold reversal restores positions.
+
+**Dimensional Shift (#3):** Cube shrinks to corner, text-shaped particles morph from scattered positions into section title. Content overlay slides in. Particles shimmer and rotate.
+
+**Face Window (#4):** Face cubie materials swap to MeshPhysicalMaterial with transmission 0.9 (glass). Content planes at multiple depths inside cube with camera-based parallax offset.
+
+**Vine-to-Tree (#5):** After vine completes, 3 bezier branch lines grow outward with staggered delays. Each branch terminates in an HTML node with backdrop-filter glass effect.
+
+**Cubie Gallery (#6):** Solved face cubies orbit outward into a constellation pattern with irregular spacing. CanvasTexture content cards. Gentle orbital motion for living gallery feel.
+
+**Shader Dissolve (#7):** Custom GLSL ShaderMaterial with 3D gradient noise. Distance-based dissolve from face center with colored edge glow. Fragments discarded below threshold.
+
+**Split-Screen (#8):** OrbitControls target shifts left, content panel slides in from right at 55vw. Vine dimming for non-active faces. Rich HTML content per section.
+
+**Hologram (#9):** Floating panels with custom hologram shader — scanlines, chromatic aberration, flicker. Additive blending for glow. Per-face color tinting. Panels billboard toward camera.
+
+**Scroll-Through (#10):** Camera follows CatmullRomCurve3 through cube interior. Scroll/swipe controls progression. Floating content planes fade based on proximity. Cubies become semi-transparent.
