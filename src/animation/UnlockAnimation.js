@@ -70,7 +70,7 @@ export class UnlockAnimation {
       cubie.mesh.material.forEach(mat => {
         if (mat.emissiveIntensity !== undefined && !mat.isInterior) {
           tl.to(mat, {
-            emissiveIntensity: 0.8,
+            emissiveIntensity: 0.4,
             duration: 0.15,
             ease: "power2.in"
           }, 0);

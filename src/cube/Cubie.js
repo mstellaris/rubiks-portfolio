@@ -21,16 +21,13 @@ function getSharedGeometry() {
 let sharedInteriorMaterial = null;
 function getInteriorMaterial() {
   if (!sharedInteriorMaterial) {
-    sharedInteriorMaterial = new THREE.MeshPhysicalMaterial({
+    sharedInteriorMaterial = new THREE.MeshStandardMaterial({
       color: 0x111111,
       emissive: 0x111111,
       emissiveIntensity: 0,
-      roughness: 0.3,
+      roughness: 0.55,
       metalness: 0,
-      clearcoat: 0.3,
-      clearcoatRoughness: 0.2,
-      reflectivity: 0.3,
-      envMapIntensity: 0.5
+      envMapIntensity: 0.2
     });
     sharedInteriorMaterial.isInterior = true;
   }
@@ -142,16 +139,13 @@ export class Cubie {
   createFaceMaterial(colorName) {
     if (!colorName) return getInteriorMaterial();
     const color = COLORS[colorName];
-    return new THREE.MeshPhysicalMaterial({
+    return new THREE.MeshStandardMaterial({
       color,
       emissive: color,
       emissiveIntensity: 0,
-      roughness: 0.3,
+      roughness: 0.55,
       metalness: 0,
-      clearcoat: 0.3,
-      clearcoatRoughness: 0.2,
-      reflectivity: 0.3,
-      envMapIntensity: 0.5
+      envMapIntensity: 0.2
     });
   }
 }
