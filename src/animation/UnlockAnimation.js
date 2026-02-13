@@ -65,10 +65,10 @@ export class UnlockAnimation {
       }
     });
 
-    // Phase 1: Quick pulse glow (0.15s)
+    // Phase 1: Quick pulse glow (0.15s) — skip shared interior material
     faceCubies.forEach((cubie) => {
       cubie.mesh.material.forEach(mat => {
-        if (mat.emissiveIntensity !== undefined) {
+        if (mat.emissiveIntensity !== undefined && !mat.isInterior) {
           tl.to(mat, {
             emissiveIntensity: 0.8,
             duration: 0.15,
@@ -222,7 +222,7 @@ export class UnlockAnimation {
       });
 
       cubie.mesh.material.forEach(mat => {
-        if (mat.emissiveIntensity !== undefined) {
+        if (mat.emissiveIntensity !== undefined && !mat.isInterior) {
           gsap.to(mat, {
             emissiveIntensity: 0,
             duration: 0.3

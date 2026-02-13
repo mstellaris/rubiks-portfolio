@@ -2,6 +2,41 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { CUBIE_SIZE, COLORS } from '../utils/constants.js';
 
+// Shared geometry — identical for all 27 cubies
+let sharedGeometry = null;
+function getSharedGeometry() {
+  if (!sharedGeometry) {
+    sharedGeometry = new RoundedBoxGeometry(
+      CUBIE_SIZE,
+      CUBIE_SIZE,
+      CUBIE_SIZE,
+      4,
+      0.08
+    );
+  }
+  return sharedGeometry;
+}
+
+// Shared interior material — used for all non-colored faces
+let sharedInteriorMaterial = null;
+function getInteriorMaterial() {
+  if (!sharedInteriorMaterial) {
+    sharedInteriorMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x111111,
+      emissive: 0x111111,
+      emissiveIntensity: 0,
+      roughness: 0.3,
+      metalness: 0,
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.2,
+      reflectivity: 0.3,
+      envMapIntensity: 0.5
+    });
+    sharedInteriorMaterial.isInterior = true;
+  }
+  return sharedInteriorMaterial;
+}
+
 export class Cubie {
   constructor(x, y, z) {
     // Logical position (-1, 0, or 1 on each axis)
@@ -91,15 +126,6 @@ export class Cubie {
   }
 
   createMesh() {
-    const geometry = new RoundedBoxGeometry(
-      CUBIE_SIZE,
-      CUBIE_SIZE,
-      CUBIE_SIZE,
-      4,      // segments (smoothness)
-      0.08    // radius of rounded edges
-    );
-
-    // Create materials for each face
     // Order: +X, -X, +Y, -Y, +Z, -Z (right, left, up, down, front, back)
     const materials = [
       this.createFaceMaterial(this.faceColors.right),
@@ -110,11 +136,12 @@ export class Cubie {
       this.createFaceMaterial(this.faceColors.back)
     ];
 
-    return new THREE.Mesh(geometry, materials);
+    return new THREE.Mesh(getSharedGeometry(), materials);
   }
 
   createFaceMaterial(colorName) {
-    const color = colorName ? COLORS[colorName] : 0x111111;
+    if (!colorName) return getInteriorMaterial();
+    const color = COLORS[colorName];
     return new THREE.MeshPhysicalMaterial({
       color,
       emissive: color,
