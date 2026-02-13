@@ -411,17 +411,94 @@ The overlay is defined in `index.html` as a centered `<div>` with a title, parag
 
 ## Experiment Plan
 
-Each idea will be implemented on a separate branch for comparison:
+Each idea will be implemented on a separate branch for comparison. Vercel auto-creates preview deployments for every non-main branch pushed to GitHub, so each experiment gets its own live URL for testing.
 
-| Branch Name | Idea |
-|-------------|------|
-| `experiment/portal-face` | 1. Portal Through the Face |
-| `experiment/face-unfold` | 2. Face Unfold / Cube Net |
-| `experiment/dimensional-shift` | 3. Dimensional Shift |
-| `experiment/face-window` | 4. Face as Window + Parallax |
-| `experiment/vine-tree` | 5. Vine-to-Tree Growth |
-| `experiment/cubie-gallery` | 6. Cubies as Gallery |
-| `experiment/shader-dissolve` | 7. Shader Dissolve |
-| `experiment/split-screen` | 8. Split-Screen Hybrid |
-| `experiment/hologram` | 9. Holographic Projection |
-| `experiment/scroll-through` | 10. Scroll Through Cube |
+| Branch Name | Idea | Status |
+|-------------|------|--------|
+| `experiment/portal-split` | **1+8 Combined: Portal + Split-Screen** | **Implemented** |
+| `experiment/portal-face` | 1. Portal Through the Face (standalone) | Planned |
+| `experiment/face-unfold` | 2. Face Unfold / Cube Net | Planned |
+| `experiment/dimensional-shift` | 3. Dimensional Shift | Planned |
+| `experiment/face-window` | 4. Face as Window + Parallax | Planned |
+| `experiment/vine-tree` | 5. Vine-to-Tree Growth | Planned |
+| `experiment/cubie-gallery` | 6. Cubies as Gallery | Planned |
+| `experiment/shader-dissolve` | 7. Shader Dissolve | Planned |
+| `experiment/split-screen` | 8. Split-Screen Hybrid (standalone) | Planned |
+| `experiment/hologram` | 9. Holographic Projection | Planned |
+| `experiment/scroll-through` | 10. Scroll Through Cube | Planned |
+
+---
+
+## Experiment: Portal + Split-Screen (Ideas #1 + #8)
+
+**Branch:** `experiment/portal-split`
+**Status:** Implemented
+
+### Concept
+
+Combines the Portal Through the Face (#1) camera-fly + cubie-dissolve effect with the Split-Screen Hybrid (#8) layout for content. The result is a cinematic transition that keeps the cube visible as a navigation anchor while dedicating proper reading space to content.
+
+### Flow
+
+1. User clicks vine button on a solved face
+2. Camera flies toward the solved face (~1s, `power2.inOut`)
+3. The 9 face cubies fade to transparent (portal "opening"), staggered center-out
+4. Canvas slides to left 40%, content panel slides in from right 60%
+5. Active vine re-curves to bridge cube and panel; other vines dim to 15%
+6. Content reveals with staggered animations (title, accent line, body, back button)
+7. Back button or Escape reverses everything smoothly
+8. On mobile (<768px): full-width panel overlay instead of split
+
+### Architecture
+
+**New files (3):**
+
+| File | Purpose |
+|------|---------|
+| `src/state/ViewState.js` | State machine (`cube` / `transitioning` / `content`). All controls check `viewState.isCubeInteractive` before processing input. |
+| `src/content/ContentPanel.js` | Manages HTML content panel. Methods: `populate()`, `getRevealTimeline()`, `getExitTimeline()`, `resetStyles()`. Uses `SECTION_CONTENT` from constants.js. |
+| `src/transition/PortalTransition.js` | Main orchestrator. Methods: `enter(face, section)`, `reverse()`, `computeCameraTarget()`, `fadeFaceCubies()`, `restoreFaceCubies()`, `addDesktopSplit()` / `addMobileSplit()`, `cleanup()`. |
+
+**Modified files (8):**
+
+| File | Changes |
+|------|---------|
+| `src/main.js` | Imports + instances for ViewState, ContentPanel, PortalTransition. Sets `faceLink.onNavigate` callback. Guards scramble button. Resize-aware during split. |
+| `src/effects/FaceLink.js` | `onNavigate` callback, `dimAllExcept()`, `restoreAll()`, `bridgeVineTo()`, `unbridgeVine()`, bridged-state update loop. |
+| `src/controls/DragControls.js` | Accepts `viewState`, blocks interaction when not in cube state. |
+| `src/controls/KeyboardControls.js` | Accepts `viewState` + `portalTransition`. Escape reverses transition. All rotation keys gated. |
+| `src/index.html` | Content panel HTML structure (title, accent line, body, back button). |
+| `src/style.css` | Content panel styles (60vw desktop, 100vw mobile, themed backgrounds, scroll support). |
+| `src/utils/constants.js` | `SECTION_CONTENT` with rich HTML per section (about, experience, projects, skills, contact, blog). |
+| `src/utils/theme.js` | `--panel-bg` and `--panel-border` CSS variables for both themes. |
+
+### Animation Timeline
+
+**Forward (~2.5s total):**
+
+| Time | Phase | Duration | Description |
+|------|-------|----------|-------------|
+| 0.0s | flyStart | 1.0s | Camera flies toward face |
+| 0.4s | fadeStart | 0.6s | 9 cubies fade transparent (staggered center-out) |
+| 0.8s | splitStart | 0.8s | Canvas → 40vw, panel slides in from right |
+| 0.8s | dimVines | 0.4s | Other vines dim to 15% |
+| 0.8s | bridgeVine | 0.8s | Active vine re-curves to panel edge |
+| 1.6s | contentReveal | 0.6s | Title, accent, body stagger in |
+
+**Reverse (~2.0s total):**
+
+| Time | Phase | Duration | Description |
+|------|-------|----------|-------------|
+| 0.0s | contentExit | 0.4s | Content staggers out |
+| 0.4s | unsplit | 0.8s | Canvas → 100vw, panel slides out |
+| 0.4s | unbridgeVine | 0.6s | Vine returns to original curve |
+| 0.8s | cubieFade | 0.5s | Cubies fade back to opaque |
+| 1.0s | cameraReturn | 0.8s | Camera returns to saved position |
+| 1.8s | done | — | Re-enable OrbitControls, state → cube |
+
+### Key Technical Decisions
+
+- **Cubie transparency:** Clone materials for the 9 face cubies, set `transparent: true`, animate opacity. Restore originals on return and dispose clones. Avoids mutating the shared interior material.
+- **Split approach:** CSS-driven canvas resize (not viewport scissoring). GSAP animates canvas width from 100vw to 40vw. Each frame updates camera aspect, renderer size, and composer size.
+- **Vine bridge:** Unproject a screen-space point (40% viewport X, center Y) to 3D for the panel edge endpoint. Lerp each line segment between original and bridge curves. Per-frame recompute accounts for cube float offset.
+- **Mobile:** Panel takes 100vw, vine bridge skipped. `touch-action: pan-y` for native scroll.
