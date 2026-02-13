@@ -13,20 +13,25 @@ export class DragControls {
     this.dragStart = null;
     this.clickedCubie = null;
     this.clickedFaceNormal = null;
+    this.activePointerId = null;
+    this.activeDragThreshold = 10;
 
-    // Threshold for detecting a drag vs click
-    this.dragThreshold = 10; // pixels
+    // Thresholds for detecting a drag vs click
+    this.dragThreshold = 10; // pixels (mouse)
+    this.touchDragThreshold = 20; // pixels (touch — fingers are less precise)
 
     this.setupEventListeners();
   }
 
   setupEventListeners() {
-    this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
-    this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
-    this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
+    // Capture phase for pointerdown so it fires BEFORE OrbitControls (bubble phase)
+    this.canvas.addEventListener('pointerdown', this.onPointerDown.bind(this), true);
+    this.canvas.addEventListener('pointermove', this.onPointerMove.bind(this));
+    this.canvas.addEventListener('pointerup', this.onPointerUp.bind(this));
+    this.canvas.addEventListener('pointercancel', this.onPointerUp.bind(this));
   }
 
-  onMouseDown(event) {
+  onPointerDown(event) {
     this.raycaster.updateMouse(event);
 
     // Get all cubie meshes
@@ -34,7 +39,13 @@ export class DragControls {
     const intersection = this.raycaster.getFirstIntersection(cubieMeshes);
 
     if (intersection) {
-      // Clicked on a cubie
+      // Prevent OrbitControls from processing this touch/click
+      event.stopImmediatePropagation();
+
+      // Capture pointer so we get move/up even if finger slides off canvas
+      this.canvas.setPointerCapture(event.pointerId);
+      this.activePointerId = event.pointerId;
+
       this.isDragging = true;
       this.dragStart = { x: event.clientX, y: event.clientY };
       this.clickedCubie = this.findCubieByMesh(intersection.object);
@@ -43,26 +54,36 @@ export class DragControls {
       // Transform normal to world space
       this.clickedFaceNormal.transformDirection(intersection.object.matrixWorld);
 
-      // Disable orbit controls while potentially rotating a face
+      // Use larger threshold for touch (fingers are less precise)
+      this.activeDragThreshold = event.pointerType === 'touch'
+        ? this.touchDragThreshold
+        : this.dragThreshold;
+
+      // Disable orbit controls while rotating a face
       this.orbitControls.enabled = false;
     }
   }
 
-  onMouseMove(event) {
+  onPointerMove(event) {
     if (!this.isDragging || !this.dragStart) return;
+    if (event.pointerId !== this.activePointerId) return;
 
     const dx = event.clientX - this.dragStart.x;
     const dy = event.clientY - this.dragStart.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     // Check if we've dragged far enough
-    if (distance > this.dragThreshold) {
+    if (distance > this.activeDragThreshold) {
       this.executeFaceRotation(dx, dy);
       this.resetDrag();
     }
   }
 
-  onMouseUp(_event) {
+  onPointerUp(event) {
+    if (event.pointerId !== this.activePointerId) return;
+    if (this.activePointerId !== null) {
+      this.canvas.releasePointerCapture(this.activePointerId);
+    }
     this.resetDrag();
   }
 
@@ -71,6 +92,7 @@ export class DragControls {
     this.dragStart = null;
     this.clickedCubie = null;
     this.clickedFaceNormal = null;
+    this.activePointerId = null;
     this.orbitControls.enabled = true;
   }
 
