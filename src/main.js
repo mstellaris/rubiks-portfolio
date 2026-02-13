@@ -13,6 +13,8 @@ import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
 import { themeManager } from './utils/theme.js';
+import { ContentPanel } from './content/ContentPanel.js';
+import { SplitScreen } from './transition/SplitScreen.js';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
@@ -143,6 +145,25 @@ document.getElementById('theme-toggle')?.addEventListener('click', () => {
 // Setup drag controls
 new DragControls(cube, camera, canvas, controls);
 
+// Content panel + split-screen transition
+const contentPanel = new ContentPanel();
+const splitScreen = new SplitScreen({
+  camera, renderer, composer, cube,
+  faceLink, contentPanel, orbitControls: controls
+});
+
+// Wire vine button clicks to split-screen
+faceLink.navigateTo = function(section) {
+  const face = [...faceLink.activeLinks.entries()]
+    .find(([, link]) => link.section === section)?.[0];
+  if (face) splitScreen.enter(face, section);
+};
+
+// Wire back button
+contentPanel.backBtn.addEventListener('click', () => {
+  splitScreen.reverse();
+});
+
 // Helper to get section from face color
 function getSectionForFace(face) {
   const faceColors = {
@@ -177,8 +198,16 @@ const sectionOverlay = document.getElementById('section-overlay');
 // Setup keyboard controls (after UI elements are available)
 setupKeyboardControls(cube, { faceLink, sectionOverlay });
 
+// Escape closes split-screen
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && splitScreen.isOpen) {
+    splitScreen.reverse();
+  }
+});
+
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
+  if (splitScreen.isOpen) return;
   faceLink.hideAll();
   cube.scramble(25);
 });
