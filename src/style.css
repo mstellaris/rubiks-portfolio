@@ -178,6 +178,45 @@ body {
   position: static;
 }
 
+/* Tree Nodes (vine-tree experiment) */
+.tree-node {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 1rem;
+  background: var(--face-btn-bg);
+  border: 1px solid var(--face-btn-border);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  z-index: 50;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: default;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tree-node:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 0 15px var(--face-btn-hover-shadow);
+}
+
+.tree-node-label {
+  color: var(--face-btn-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.tree-node-sub {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 /* Theme Toggle */
 .theme-toggle {
   position: fixed;

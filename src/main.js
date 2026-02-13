@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import gsap from 'gsap';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -13,6 +14,7 @@ import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
 import { themeManager } from './utils/theme.js';
+import { BranchTree } from './effects/BranchTree.js';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
@@ -101,6 +103,22 @@ const particles = new ParticleSystem(scene);
 // Face link system (lines + buttons for solved faces)
 const faceLink = new FaceLink(scene, camera, cube);
 
+// Branch tree system (extends vines into content trees)
+const branchTree = new BranchTree(scene, camera, cube);
+
+// Override navigateTo: instead of overlay, grow a branch tree
+faceLink.navigateTo = function(section) {
+  const entry = [...faceLink.activeLinks.entries()]
+    .find(([, link]) => link.section === section);
+  if (!entry) return;
+
+  const [face, link] = entry;
+  // Hide the vine button
+  gsap.to(link.button, { opacity: 0, pointerEvents: 'none', duration: 0.3 });
+  // Grow branches from the vine endpoint
+  branchTree.grow(face, section, link.endPoint.clone(), link.faceNormal.clone());
+};
+
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
 
@@ -180,6 +198,7 @@ setupKeyboardControls(cube, { faceLink, sectionOverlay });
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
   faceLink.hideAll();
+  branchTree.removeAll();
   cube.scramble(25);
 });
 
@@ -217,6 +236,9 @@ function animate() {
 
   // Update face links (lines follow cube)
   faceLink.update();
+
+  // Update branch trees
+  branchTree.update();
 
   controls.update();
   if (composer) {
