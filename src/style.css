@@ -178,6 +178,52 @@ body {
   position: static;
 }
 
+/* Dissolve Overlay */
+.dissolve-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+  pointer-events: none;
+}
+
+.dissolve-content {
+  text-align: center;
+  max-width: 600px;
+  padding: 2rem;
+}
+
+.dissolve-title {
+  font-size: 3rem;
+  font-weight: 300;
+  color: var(--section-text);
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+}
+
+.dissolve-lead {
+  font-size: 1.15rem;
+  color: var(--section-text);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.dissolve-body {
+  font-size: 1rem;
+  color: var(--section-subtext);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.dissolve-back {
+  position: static;
+}
+
 /* Theme Toggle */
 .theme-toggle {
   position: fixed;
