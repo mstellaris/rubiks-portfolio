@@ -70,7 +70,7 @@ const THEMES = {
       bloomRadius: 0.2,
       bloomThreshold: 0.95,
       particleColor: 0x3366aa,
-      particleOpacity: 0.35,
+      particleOpacity: 0.6,
       vineColor: 0x333344,
       vineOpacity: 0.6,
       interiorColor: 0x555555,
