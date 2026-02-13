@@ -13,6 +13,7 @@ import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
 import { themeManager } from './utils/theme.js';
+import { CubieGallery } from './effects/CubieGallery.js';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
@@ -101,6 +102,20 @@ const particles = new ParticleSystem(scene);
 // Face link system (lines + buttons for solved faces)
 const faceLink = new FaceLink(scene, camera, cube);
 
+// Cubie gallery system
+const cubieGallery = new CubieGallery(cube, scene, camera);
+
+// Override navigateTo: open cubie gallery instead of overlay
+faceLink.navigateTo = function(section) {
+  const face = [...faceLink.activeLinks.entries()]
+    .find(([, link]) => link.section === section)?.[0];
+  if (face) {
+    const link = faceLink.activeLinks.get(face);
+    if (link && link.button) link.button.style.display = 'none';
+    cubieGallery.open(face, section);
+  }
+};
+
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
 
@@ -179,6 +194,7 @@ setupKeyboardControls(cube, { faceLink, sectionOverlay });
 
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
+  cubieGallery.closeAll();
   faceLink.hideAll();
   cube.scramble(25);
 });
@@ -214,6 +230,9 @@ function animate() {
 
   // Update particles
   particles.update(time);
+
+  // Update cubie gallery orbits
+  cubieGallery.update(time);
 
   // Update face links (lines follow cube)
   faceLink.update();
