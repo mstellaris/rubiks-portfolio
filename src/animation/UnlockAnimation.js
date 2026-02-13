@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { SECTIONS } from '../utils/constants.js';
+
 
 export class UnlockAnimation {
   constructor(cube) {
@@ -32,8 +32,6 @@ export class UnlockAnimation {
     const faceCubies = this.getCubiesOnFace(face);
     const faceCenter = this.getFaceCenter(face);
     const faceNormal = this.getFaceNormal(face);
-    const section = SECTIONS[this.getFaceColor(face)];
-
     // Sort cubies by distance from center (center first, corners last)
     const sortedCubies = [...faceCubies].sort((a, b) => {
       const posA = new THREE.Vector3();

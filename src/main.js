@@ -102,7 +102,7 @@ const faceLink = new FaceLink(scene, camera, cube);
 const unlockAnimation = new UnlockAnimation(cube);
 
 // Setup drag controls
-const dragControls = new DragControls(cube, camera, canvas, controls);
+new DragControls(cube, camera, canvas, controls);
 
 // Helper to get section from face color
 function getSectionForFace(face) {

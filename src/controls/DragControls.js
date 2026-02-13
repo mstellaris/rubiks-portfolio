@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { RaycasterHelper } from './Raycaster.js';
 
 export class DragControls {
@@ -63,7 +62,7 @@ export class DragControls {
     }
   }
 
-  onMouseUp(event) {
+  onMouseUp(_event) {
     this.resetDrag();
   }
 

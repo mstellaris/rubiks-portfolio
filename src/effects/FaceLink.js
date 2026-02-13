@@ -254,10 +254,6 @@ export class FaceLink {
       }
     });
 
-    // Animate line shrinking back (reverse vine)
-    const positionAttr = link.line.geometry.attributes.position;
-    const startPoint = link.faceCenter;
-
     gsap.to(link.line.material, {
       opacity: 0,
       duration: 0.4,
