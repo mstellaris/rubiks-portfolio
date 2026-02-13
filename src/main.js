@@ -13,6 +13,7 @@ import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
 import { themeManager } from './utils/theme.js';
+import { FaceWindow } from './effects/FaceWindow.js';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
@@ -101,6 +102,16 @@ const particles = new ParticleSystem(scene);
 // Face link system (lines + buttons for solved faces)
 const faceLink = new FaceLink(scene, camera, cube);
 
+// Face window system (glass + parallax content)
+const faceWindow = new FaceWindow(cube, scene, camera);
+
+// Override navigateTo: activate glass window instead of overlay
+faceLink.navigateTo = function(section) {
+  const face = [...faceLink.activeLinks.entries()]
+    .find(([, link]) => link.section === section)?.[0];
+  if (face) faceWindow.activate(face, section);
+};
+
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
 
@@ -180,6 +191,7 @@ setupKeyboardControls(cube, { faceLink, sectionOverlay });
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
   faceLink.hideAll();
+  faceWindow.deactivateAll();
   cube.scramble(25);
 });
 
@@ -217,6 +229,9 @@ function animate() {
 
   // Update face links (lines follow cube)
   faceLink.update();
+
+  // Update face windows (parallax)
+  faceWindow.update();
 
   controls.update();
   if (composer) {
