@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  build:
+    name: Build & Bundle Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      # Check bundle size — fail if JS bundle exceeds 700KB
+      - name: Check bundle size
+        run: |
+          JS_FILE=$(find dist/assets -name '*.js' -type f)
+          JS_SIZE=$(wc -c < "$JS_FILE" | tr -d ' ')
+          JS_SIZE_KB=$((JS_SIZE / 1024))
+          echo "Bundle size: ${JS_SIZE_KB}KB"
+
+          MAX_SIZE_KB=700
+          if [ "$JS_SIZE_KB" -gt "$MAX_SIZE_KB" ]; then
+            echo "::error::JS bundle is ${JS_SIZE_KB}KB, exceeding ${MAX_SIZE_KB}KB limit"
+            exit 1
+          else
+            echo "✓ Bundle size OK (${JS_SIZE_KB}KB / ${MAX_SIZE_KB}KB limit)"
+          fi
