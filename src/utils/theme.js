@@ -22,6 +22,8 @@ const THEMES = {
       '--overlay-bg': 'rgba(10, 10, 10, 0.95)',
       '--section-text': '#ffffff',
       '--section-subtext': 'rgba(255, 255, 255, 0.6)',
+      '--panel-bg': 'rgba(20, 22, 30, 0.98)',
+      '--panel-border': 'rgba(255, 255, 255, 0.08)',
     },
     scene: {
       background: 0x252a33,
@@ -60,6 +62,8 @@ const THEMES = {
       '--overlay-bg': 'rgba(240, 240, 245, 0.95)',
       '--section-text': '#1e1e28',
       '--section-subtext': 'rgba(30, 30, 40, 0.6)',
+      '--panel-bg': 'rgba(245, 245, 248, 0.98)',
+      '--panel-border': 'rgba(0, 0, 0, 0.08)',
     },
     scene: {
       background: 0xe8e8ec,

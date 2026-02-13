@@ -10,6 +10,7 @@ export class FaceLink {
     this._projVec = new THREE.Vector3(); // reusable vector for projection
     this.vineColor = 0xffffff;
     this.vineOpacity = 0.7;
+    this.onNavigate = null; // callback(face, section) — set by main.js for portal transition
   }
 
   show(face, section) {
@@ -53,7 +54,11 @@ export class FaceLink {
     button.dataset.face = face;
 
     button.addEventListener('click', () => {
-      this.navigateTo(section);
+      if (this.onNavigate) {
+        this.onNavigate(face, section);
+      } else {
+        this.navigateTo(section);
+      }
     });
 
     document.body.appendChild(button);
@@ -283,9 +288,163 @@ export class FaceLink {
 
     // Update existing active vine lines
     for (const [, link] of this.activeLinks) {
-      link.line.material.color.setHex(vineColor);
-      link.line.material.opacity = vineOpacity;
+      if (!link.isDimmed) {
+        link.line.material.color.setHex(vineColor);
+        link.line.material.opacity = vineOpacity;
+      }
     }
+  }
+
+  /**
+   * Dim all vines except the active face — used during portal transition.
+   * Returns a GSAP timeline for sequencing.
+   */
+  dimAllExcept(activeFace) {
+    const tl = gsap.timeline();
+    for (const [face, link] of this.activeLinks) {
+      if (face === activeFace) continue;
+      link.isDimmed = true;
+      tl.to(link.line.material, { opacity: 0.15, duration: 0.4, ease: 'power2.out' }, 0);
+      tl.to(link.button, { opacity: 0.15, pointerEvents: 'none', duration: 0.4, ease: 'power2.out' }, 0);
+    }
+    return tl;
+  }
+
+  /**
+   * Restore all dimmed vines to full opacity and re-enable pointer events.
+   * Returns a GSAP timeline for sequencing.
+   */
+  restoreAll() {
+    const tl = gsap.timeline();
+    for (const [, link] of this.activeLinks) {
+      if (!link.isDimmed) continue;
+      link.isDimmed = false;
+      tl.to(link.line.material, { opacity: this.vineOpacity, duration: 0.4, ease: 'power2.out' }, 0);
+      tl.to(link.button, { opacity: 1, pointerEvents: 'auto', duration: 0.4, ease: 'power2.out' }, 0);
+    }
+    return tl;
+  }
+
+  /**
+   * Bridge the active vine toward the content panel edge.
+   * Hides the button and morphs the line to a new endpoint.
+   * @param {string} face - the face whose vine to bridge
+   * @param {gsap.core.Timeline} tl - parent timeline to add tweens to
+   * @param {number} panelEdgeScreenX - screen-space X ratio (0-1) of the panel edge (e.g. 0.4)
+   */
+  bridgeVineTo(face, tl, panelEdgeScreenX) {
+    const link = this.activeLinks.get(face);
+    if (!link || !link.basePositions) return;
+
+    // Hide the button
+    tl.to(link.button, { opacity: 0, duration: 0.3, ease: 'power2.in' }, 0);
+
+    // Compute bridge endpoint: unproject the panel edge screen position to 3D
+    const bridgeEnd = this._computeBridgeEndpoint(link, panelEdgeScreenX);
+    link.bridgeEndPoint = bridgeEnd;
+
+    // Compute bridge curve points (start → mid → bridgeEnd)
+    const bridgeMid = link.faceCenter.clone()
+      .add(bridgeEnd.clone().sub(link.faceCenter).multiplyScalar(0.5))
+      .add(link.faceNormal.clone().multiplyScalar(0.5));
+    link.bridgeCurvePoints = [link.faceCenter.clone(), bridgeMid, bridgeEnd];
+
+    // Cache original base positions so we can lerp between them
+    link.originalBasePositions = new Float32Array(link.basePositions);
+    link.isBridged = false;
+
+    // Animate the morphing from original curve to bridge curve
+    const morphState = { t: 0 };
+    tl.to(morphState, {
+      t: 1,
+      duration: 0.8,
+      ease: 'power2.inOut',
+      onUpdate: () => {
+        this._lerpVinePositions(link, morphState.t);
+      },
+      onComplete: () => {
+        link.isBridged = true;
+      }
+    }, 0);
+  }
+
+  /**
+   * Reverse the vine bridge — morph back to original curve and restore button.
+   * @param {string} face - the face whose vine to unbridge
+   * @returns {gsap.core.Timeline}
+   */
+  unbridgeVine(face) {
+    const link = this.activeLinks.get(face);
+    const tl = gsap.timeline();
+    if (!link || !link.isBridged) return tl;
+
+    link.isBridged = false;
+
+    const morphState = { t: 1 };
+    tl.to(morphState, {
+      t: 0,
+      duration: 0.6,
+      ease: 'power2.inOut',
+      onUpdate: () => {
+        this._lerpVinePositions(link, morphState.t);
+      },
+      onComplete: () => {
+        // Restore base positions to originals
+        link.basePositions.set(link.originalBasePositions);
+        link.baseEndPoint = link.curvePoints[link.curvePoints.length - 1].clone();
+        link.bridgeCurvePoints = null;
+        link.bridgeEndPoint = null;
+        link.originalBasePositions = null;
+      }
+    }, 0);
+
+    // Restore button
+    tl.to(link.button, { opacity: 1, duration: 0.4, ease: 'back.out(1.7)' }, 0.3);
+
+    return tl;
+  }
+
+  /** Compute a 3D point at the panel edge by unprojecting a screen position. */
+  _computeBridgeEndpoint(link, panelEdgeScreenX) {
+    // Screen X in NDC: panelEdgeScreenX maps 0-1 → -1 to +1
+    const ndcX = panelEdgeScreenX * 2 - 1;
+    const ndcY = 0; // center vertically
+
+    // Unproject at the same depth as the face center
+    const faceNDC = link.faceCenter.clone().project(this.camera);
+    const depth = faceNDC.z;
+
+    const target = new THREE.Vector3(ndcX, ndcY, depth).unproject(this.camera);
+    return target;
+  }
+
+  /** Lerp all vine segment positions between original and bridge curves. */
+  _lerpVinePositions(link, t) {
+    const posArray = link.line.geometry.attributes.position.array;
+    const segCount = link.segmentCount;
+    const floatOffset = this.cube.group.position.y;
+
+    for (let i = 0; i < segCount; i++) {
+      const u = i / (segCount - 1);
+      // Original position from cached base
+      const origIdx = i * 3;
+      const ox = link.originalBasePositions[origIdx];
+      const oy = link.originalBasePositions[origIdx + 1];
+      const oz = link.originalBasePositions[origIdx + 2];
+
+      // Bridge position from bridge curve
+      const bp = this.getPointOnCurve(link.bridgeCurvePoints, u);
+
+      // Lerp
+      posArray[origIdx] = ox + (bp.x - ox) * t;
+      posArray[origIdx + 1] = (oy + (bp.y - oy) * t) + floatOffset;
+      posArray[origIdx + 2] = oz + (bp.z - oz) * t;
+    }
+    link.line.geometry.attributes.position.needsUpdate = true;
+
+    // Update endpoint for button positioning
+    const lastIdx = (segCount - 1) * 3;
+    link.endPoint.set(posArray[lastIdx], posArray[lastIdx + 1], posArray[lastIdx + 2]);
   }
 
   updateButtonPosition(link) {
@@ -309,8 +468,33 @@ export class FaceLink {
     const floatOffset = this.cube.group.position.y;
 
     for (const [, link] of this.activeLinks) {
-      // Apply cached base positions + Y-offset (avoids full curve regeneration)
-      if (link.basePositions) {
+      // If vine is bridged, recompute bridge curve each frame
+      // to account for cube float offset and shifted canvas
+      if (link.isBridged && link.bridgeCurvePoints) {
+        // Update bridge start point with float offset
+        link.bridgeCurvePoints[0].copy(link.faceCenter).add(
+          new THREE.Vector3(0, floatOffset, 0)
+        );
+        // Recompute midpoint
+        link.bridgeCurvePoints[1].copy(link.faceCenter)
+          .add(link.bridgeEndPoint.clone().sub(link.faceCenter).multiplyScalar(0.5))
+          .add(link.faceNormal.clone().multiplyScalar(0.5));
+        link.bridgeCurvePoints[1].y += floatOffset;
+
+        const posArray = link.line.geometry.attributes.position.array;
+        for (let i = 0; i < link.segmentCount; i++) {
+          const t = i / (link.segmentCount - 1);
+          const pt = this.getPointOnCurve(link.bridgeCurvePoints, t);
+          posArray[i * 3] = pt.x;
+          posArray[i * 3 + 1] = pt.y;
+          posArray[i * 3 + 2] = pt.z;
+        }
+        link.line.geometry.attributes.position.needsUpdate = true;
+
+        const lastIdx = (link.segmentCount - 1) * 3;
+        link.endPoint.set(posArray[lastIdx], posArray[lastIdx + 1], posArray[lastIdx + 2]);
+      } else if (link.basePositions) {
+        // Normal mode: apply cached base positions + Y-offset
         const posArray = link.line.geometry.attributes.position.array;
         const base = link.basePositions;
         for (let i = 0, len = link.segmentCount * 3; i < len; i += 3) {

@@ -178,6 +178,107 @@ body {
   position: static;
 }
 
+/* Content Panel */
+.content-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 60vw;
+  height: 100vh;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 60;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--panel-bg);
+  border-left: 1px solid var(--panel-border);
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.content-panel.active {
+  pointer-events: auto;
+}
+
+.content-panel-inner {
+  padding: 4rem 3rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.content-header {
+  margin-bottom: 2rem;
+}
+
+.content-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: var(--section-text);
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.content-accent-line {
+  width: 0;
+  height: 2px;
+  margin-top: 1rem;
+}
+
+.content-body {
+  color: var(--section-subtext);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+.content-body > * {
+  opacity: 0;
+  transform: translateY(15px);
+}
+
+.content-body p {
+  margin-bottom: 1rem;
+}
+
+.content-body .content-lead {
+  font-size: 1.15rem;
+  color: var(--section-text);
+  margin-bottom: 1.5rem;
+}
+
+.content-body .content-stats {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.content-body .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.content-body .stat-number {
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--section-text);
+}
+
+.content-body .stat-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--section-subtext);
+}
+
+.content-back-btn {
+  position: relative;
+  margin-top: 3rem;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
 /* Theme Toggle */
 .theme-toggle {
   position: fixed;
@@ -244,5 +345,22 @@ body {
     width: 36px;
     height: 36px;
     font-size: 1rem;
+  }
+
+  .content-panel {
+    width: 100vw;
+    border-left: none;
+  }
+
+  .content-panel-inner {
+    padding: 2rem 1.5rem;
+  }
+
+  .content-title {
+    font-size: 1.8rem;
+  }
+
+  .content-body .content-stats {
+    gap: 1.5rem;
   }
 }

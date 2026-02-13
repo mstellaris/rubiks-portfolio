@@ -13,6 +13,9 @@ import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
 import { themeManager } from './utils/theme.js';
+import { ViewState } from './state/ViewState.js';
+import { ContentPanel } from './content/ContentPanel.js';
+import { PortalTransition } from './transition/PortalTransition.js';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
@@ -140,8 +143,30 @@ document.getElementById('theme-toggle')?.addEventListener('click', () => {
   themeManager.toggle();
 });
 
+// View state machine
+const viewState = new ViewState();
+
+// Content panel
+const contentPanel = new ContentPanel();
+
 // Setup drag controls
-new DragControls(cube, camera, canvas, controls);
+new DragControls(cube, camera, canvas, controls, viewState);
+
+// Portal transition orchestrator
+const portalTransition = new PortalTransition({
+  camera, canvas, renderer, composer, cube,
+  faceLink, contentPanel, viewState, orbitControls: controls
+});
+
+// Wire vine button clicks to portal transition
+faceLink.onNavigate = (face, section) => {
+  portalTransition.enter(face, section);
+};
+
+// Wire content panel back button
+contentPanel.backBtn.addEventListener('click', () => {
+  portalTransition.reverse();
+});
 
 // Helper to get section from face color
 function getSectionForFace(face) {
@@ -175,10 +200,11 @@ const backBtn = document.getElementById('back-btn');
 const sectionOverlay = document.getElementById('section-overlay');
 
 // Setup keyboard controls (after UI elements are available)
-setupKeyboardControls(cube, { faceLink, sectionOverlay });
+setupKeyboardControls(cube, { faceLink, sectionOverlay, viewState, portalTransition });
 
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
+  if (!viewState.isCubeInteractive) return;
   faceLink.hideAll();
   cube.scramble(25);
 });
@@ -195,10 +221,20 @@ setTimeout(() => {
 
 // Handle resize
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+  // During content or transitioning states, use the canvas actual size (may be 40vw)
+  if (viewState.current !== 'cube') {
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+    if (composer) composer.setSize(w, h);
+  } else {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+  }
 });
 
 // Animation loop with idle animation

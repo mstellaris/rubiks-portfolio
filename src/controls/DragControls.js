@@ -1,11 +1,12 @@
 import { RaycasterHelper } from './Raycaster.js';
 
 export class DragControls {
-  constructor(cube, camera, canvas, orbitControls) {
+  constructor(cube, camera, canvas, orbitControls, viewState) {
     this.cube = cube;
     this.camera = camera;
     this.canvas = canvas;
     this.orbitControls = orbitControls;
+    this.viewState = viewState;
     this.raycaster = new RaycasterHelper(camera, canvas);
 
     // Drag state
@@ -32,6 +33,7 @@ export class DragControls {
   }
 
   onPointerDown(event) {
+    if (this.viewState && !this.viewState.isCubeInteractive) return;
     this.raycaster.updateMouse(event);
 
     // Get all cubie meshes

@@ -2,13 +2,27 @@
 // R = Right, L = Left, U = Up, D = Down, F = Front, B = Back
 // Lowercase or with Shift = counter-clockwise (prime moves)
 
-export function setupKeyboardControls(cube, { faceLink, sectionOverlay } = {}) {
+export function setupKeyboardControls(cube, { faceLink, sectionOverlay, viewState, portalTransition } = {}) {
   document.addEventListener('keydown', (e) => {
     // Ignore if typing in input field
     if (e.target.tagName === 'INPUT') return;
 
     const key = e.key.toLowerCase();
     const isShift = e.shiftKey;
+
+    // Escape always available: close content view or overlay
+    if (key === 'escape') {
+      if (viewState && viewState.current === 'content' && portalTransition) {
+        portalTransition.reverse();
+        return;
+      }
+      sectionOverlay?.classList.add('hidden');
+      faceLink?.hideAll();
+      return;
+    }
+
+    // All other keys require cube to be interactive
+    if (viewState && !viewState.isCubeInteractive) return;
 
     // Direction: 1 = clockwise, -1 = counter-clockwise (prime)
     const dir = isShift ? -1 : 1;
@@ -62,10 +76,6 @@ export function setupKeyboardControls(cube, { faceLink, sectionOverlay } = {}) {
           faceLink?.hideAll();
           cube.scramble(25);
         }
-        break;
-      case 'escape': // Close overlay
-        sectionOverlay?.classList.add('hidden');
-        faceLink?.hideAll();
         break;
     }
   });
