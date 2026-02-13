@@ -8,6 +8,8 @@ export class FaceLink {
     this.cube = cube;
     this.activeLinks = new Map(); // face -> { line, button, curve, ... }
     this._projVec = new THREE.Vector3(); // reusable vector for projection
+    this.vineColor = 0xffffff;
+    this.vineOpacity = 0.7;
   }
 
   show(face, section) {
@@ -34,7 +36,7 @@ export class FaceLink {
     lineGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
     const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0xffffff,
+      color: this.vineColor,
       transparent: true,
       opacity: 0
     });
@@ -76,7 +78,7 @@ export class FaceLink {
 
     // First fade in the line material
     gsap.to(lineMaterial, {
-      opacity: 0.7,
+      opacity: this.vineOpacity,
       duration: 0.3,
       ease: "power2.out"
     });
@@ -272,6 +274,17 @@ export class FaceLink {
   hideAll() {
     for (const face of this.activeLinks.keys()) {
       this.hide(face);
+    }
+  }
+
+  setThemeColors(vineColor, vineOpacity) {
+    this.vineColor = vineColor;
+    this.vineOpacity = vineOpacity;
+
+    // Update existing active vine lines
+    for (const [, link] of this.activeLinks) {
+      link.line.material.color.setHex(vineColor);
+      link.line.material.opacity = vineOpacity;
     }
   }
 

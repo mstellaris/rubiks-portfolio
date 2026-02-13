@@ -5,12 +5,14 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 import { Cube } from './cube/Cube.js';
+import { getInteriorMaterial } from './cube/Cubie.js';
 import { setupKeyboardControls } from './controls/KeyboardControls.js';
 import { DragControls } from './controls/DragControls.js';
 import { UnlockAnimation } from './animation/UnlockAnimation.js';
 import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
+import { themeManager } from './utils/theme.js';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
@@ -20,7 +22,7 @@ injectSpeedInsights();
 
 // Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x252a33);
+scene.background = new THREE.Color(0x252a33); // overridden by theme system
 
 // Lighting
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
@@ -70,10 +72,11 @@ const isSmallViewport = (window.innerWidth * window.innerHeight) < 500000;
 const isLowEnd = isMobile && isSmallViewport;
 
 let composer = null;
+let bloomPass = null;
 if (!isLowEnd) {
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloomPass = new UnrealBloomPass(
+  bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
     0.5,   // Strength
     0.4,   // Radius
@@ -100,6 +103,42 @@ const faceLink = new FaceLink(scene, camera, cube);
 
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
+
+// Theme system
+function applySceneTheme(values) {
+  scene.background = new THREE.Color(values.background);
+  ambientLight.intensity = values.ambientIntensity;
+  directionalLight.intensity = values.directionalIntensity;
+  renderer.toneMappingExposure = values.toneMappingExposure;
+
+  if (bloomPass) {
+    bloomPass.strength = values.bloomStrength;
+    bloomPass.radius = values.bloomRadius;
+    bloomPass.threshold = values.bloomThreshold;
+  }
+
+  // Particles
+  particles.particles.material.color.setHex(values.particleColor);
+  particles.particles.material.opacity = values.particleOpacity;
+
+  // Vine lines
+  faceLink.setThemeColors(values.vineColor, values.vineOpacity);
+
+  // Shared interior material
+  const interiorMat = getInteriorMaterial();
+  interiorMat.color.setHex(values.interiorColor);
+  interiorMat.emissive.setHex(values.interiorColor);
+
+  // Unlock animation glow
+  unlockAnimation.emissiveGlowPeak = values.emissiveGlowPeak;
+}
+
+themeManager.init(applySceneTheme);
+
+// Wire toggle button
+document.getElementById('theme-toggle')?.addEventListener('click', () => {
+  themeManager.toggle();
+});
 
 // Setup drag controls
 new DragControls(cube, camera, canvas, controls);

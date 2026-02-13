@@ -9,6 +9,7 @@ export class UnlockAnimation {
     this.savedState = []; // Store positions/rotations before animation
     this.onComplete = null; // Callback when animation finishes
     this.animationQueue = []; // Queue for pending face animations
+    this.emissiveGlowPeak = 0.4;
   }
 
   // Play the unlock animation for a solved face
@@ -64,11 +65,12 @@ export class UnlockAnimation {
     });
 
     // Phase 1: Quick pulse glow (0.15s) — skip shared interior material
+    const glowPeak = this.emissiveGlowPeak;
     faceCubies.forEach((cubie) => {
       cubie.mesh.material.forEach(mat => {
         if (mat.emissiveIntensity !== undefined && !mat.isInterior) {
           tl.to(mat, {
-            emissiveIntensity: 0.4,
+            emissiveIntensity: glowPeak,
             duration: 0.15,
             ease: "power2.in"
           }, 0);

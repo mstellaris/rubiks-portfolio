@@ -34,6 +34,8 @@ function getInteriorMaterial() {
   return sharedInteriorMaterial;
 }
 
+export { getInteriorMaterial };
+
 export class Cubie {
   constructor(x, y, z) {
     // Logical position (-1, 0, or 1 on each axis)
