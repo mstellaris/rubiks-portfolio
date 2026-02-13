@@ -101,9 +101,6 @@ const faceLink = new FaceLink(scene, camera, cube);
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
 
-// Setup keyboard controls
-setupKeyboardControls(cube);
-
 // Setup drag controls
 const dragControls = new DragControls(cube, camera, canvas, controls);
 
@@ -138,6 +135,9 @@ const scrambleBtn = document.getElementById('scramble-btn');
 const backBtn = document.getElementById('back-btn');
 const sectionOverlay = document.getElementById('section-overlay');
 
+// Setup keyboard controls (after UI elements are available)
+setupKeyboardControls(cube, { faceLink, sectionOverlay });
+
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
   faceLink.hideAll();
@@ -147,20 +147,6 @@ scrambleBtn?.addEventListener('click', () => {
 // Back button (close section overlay)
 backBtn?.addEventListener('click', () => {
   sectionOverlay?.classList.add('hidden');
-});
-
-// Scramble with spacebar
-document.addEventListener('keydown', (e) => {
-  if (e.key === ' ' && !e.target.closest('button')) { // Spacebar (not on button)
-    e.preventDefault();
-    faceLink.hideAll();
-    cube.scramble(25);
-  }
-  // Escape to close overlay
-  if (e.key === 'Escape') {
-    sectionOverlay?.classList.add('hidden');
-    faceLink.hideAll();
-  }
 });
 
 // Initial scramble on load (after a short delay)

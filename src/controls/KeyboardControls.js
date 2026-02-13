@@ -2,7 +2,7 @@
 // R = Right, L = Left, U = Up, D = Down, F = Front, B = Back
 // Lowercase or with Shift = counter-clockwise (prime moves)
 
-export function setupKeyboardControls(cube) {
+export function setupKeyboardControls(cube, { faceLink, sectionOverlay } = {}) {
   document.addEventListener('keydown', (e) => {
     // Ignore if typing in input field
     if (e.target.tagName === 'INPUT') return;
@@ -55,6 +55,17 @@ export function setupKeyboardControls(cube) {
           cube.rotate('z', 1, 1);
           console.log('Quick scramble: R U F');
         }
+        break;
+      case ' ': // Spacebar = full scramble
+        if (!e.target.closest('button')) {
+          e.preventDefault();
+          faceLink?.hideAll();
+          cube.scramble(25);
+        }
+        break;
+      case 'escape': // Close overlay
+        sectionOverlay?.classList.add('hidden');
+        faceLink?.hideAll();
         break;
     }
   });
