@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js';
 import { Cube } from './cube/Cube.js';
 import { setupKeyboardControls } from './controls/KeyboardControls.js';
 import { DragControls } from './controls/DragControls.js';
@@ -31,8 +31,8 @@ directionalLight.position.set(5, 10, 7);
 scene.add(directionalLight);
 
 // Load HDR environment map (optional - falls back gracefully)
-const rgbeLoader = new RGBELoader();
-rgbeLoader.load('/hdri/studio.hdr',
+const hdrLoader = new HDRLoader();
+hdrLoader.load('/hdri/studio.hdr',
   (texture) => {
     texture.mapping = THREE.EquirectangularReflectionMapping;
     scene.environment = texture;
