@@ -217,6 +217,70 @@ body {
 [data-theme="light"] .theme-toggle .icon-sun { opacity: 0; transform: rotate(90deg); }
 [data-theme="light"] .theme-toggle .icon-moon { opacity: 1; transform: rotate(0deg); }
 
+/* Scroll-Through Overlay */
+.scroll-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 80;
+}
+
+.scroll-progress-bar {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.scroll-progress-fill {
+  width: 0%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 2px;
+  transition: width 0.1s ease;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.scroll-back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 6px;
+  pointer-events: all;
+  transition: all 0.3s ease;
+}
+
+.scroll-back-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .legend {

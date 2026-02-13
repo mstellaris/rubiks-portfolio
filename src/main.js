@@ -13,6 +13,7 @@ import { ParticleSystem } from './effects/Particles.js';
 import { FaceLink } from './effects/FaceLink.js';
 import { SECTIONS } from './utils/constants.js';
 import { themeManager } from './utils/theme.js';
+import { ScrollThrough } from './effects/ScrollThrough.js';
 import { inject } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
@@ -101,6 +102,18 @@ const particles = new ParticleSystem(scene);
 // Face link system (lines + buttons for solved faces)
 const faceLink = new FaceLink(scene, camera, cube);
 
+// Scroll-through system
+const scrollThrough = new ScrollThrough(cube, scene, camera, controls);
+
+// Override navigateTo: trigger scroll-through instead of overlay
+faceLink.navigateTo = function(section) {
+  const face = [...faceLink.activeLinks.entries()]
+    .find(([, link]) => link.section === section)?.[0];
+  if (face) {
+    scrollThrough.enter(face, section);
+  }
+};
+
 // Unlock animation
 const unlockAnimation = new UnlockAnimation(cube);
 
@@ -179,6 +192,7 @@ setupKeyboardControls(cube, { faceLink, sectionOverlay });
 
 // Scramble button
 scrambleBtn?.addEventListener('click', () => {
+  if (scrollThrough.isActive) scrollThrough.reverse();
   faceLink.hideAll();
   cube.scramble(25);
 });
@@ -214,6 +228,9 @@ function animate() {
 
   // Update particles
   particles.update(time);
+
+  // Update scroll-through camera
+  scrollThrough.update();
 
   // Update face links (lines follow cube)
   faceLink.update();
