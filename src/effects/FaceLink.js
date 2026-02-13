@@ -7,6 +7,7 @@ export class FaceLink {
     this.camera = camera;
     this.cube = cube;
     this.activeLinks = new Map(); // face -> { line, button, curve, ... }
+    this._projVec = new THREE.Vector3(); // reusable vector for projection
   }
 
   show(face, section) {
@@ -119,13 +120,23 @@ export class FaceLink {
         positionAttr.needsUpdate = true;
       },
       onComplete: () => {
-        // Finalize curve positions (remove wobble)
+        // Cache final positions for efficient per-frame Y-offset updates
+        const basePositions = new Float32Array(segmentCount * 3);
         for (let i = 0; i < segmentCount; i++) {
           const t = i / (segmentCount - 1);
           const point = this.getPointOnCurve(curvePoints, t);
+          basePositions[i * 3] = point.x;
+          basePositions[i * 3 + 1] = point.y;
+          basePositions[i * 3 + 2] = point.z;
           positionAttr.setXYZ(i, point.x, point.y, point.z);
         }
         positionAttr.needsUpdate = true;
+
+        const link = this.activeLinks.get(face);
+        if (link) {
+          link.basePositions = basePositions;
+          link.baseEndPoint = curvePoints[curvePoints.length - 1].clone();
+        }
 
         // Show button with scale animation
         gsap.to(button, {
@@ -140,9 +151,6 @@ export class FaceLink {
         });
       }
     });
-
-    // Start updating button position
-    this.updateButtonPosition(face);
   }
 
   // Generate a curved vine-like path from face center outward
@@ -271,54 +279,44 @@ export class FaceLink {
     }
   }
 
-  updateButtonPosition(face) {
-    const link = this.activeLinks.get(face);
-    if (!link) return;
-
+  updateButtonPosition(link) {
     // Project 3D end point to screen coordinates
-    const screenPos = link.endPoint.clone().project(this.camera);
+    this._projVec.copy(link.endPoint).project(this.camera);
 
-    const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
+    const x = (this._projVec.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-this._projVec.y * 0.5 + 0.5) * window.innerHeight;
 
     // Check if point is in front of camera
-    if (screenPos.z < 1) {
+    if (this._projVec.z < 1) {
       link.button.style.left = `${x}px`;
       link.button.style.top = `${y}px`;
       link.button.style.visibility = 'visible';
     } else {
       link.button.style.visibility = 'hidden';
     }
-
-    // Continue updating
-    requestAnimationFrame(() => this.updateButtonPosition(face));
   }
 
   update() {
-    // Update line positions to account for cube movement (idle animation)
-    for (const [face, link] of this.activeLinks) {
-      const faceCenter = this.getFaceCenter(face);
-      const faceNormal = this.getFaceNormal(face);
+    const floatOffset = this.cube.group.position.y;
 
-      // Account for floating animation
-      const floatOffset = this.cube.group.position.y;
+    for (const [, link] of this.activeLinks) {
+      // Apply cached base positions + Y-offset (avoids full curve regeneration)
+      if (link.basePositions) {
+        const posArray = link.line.geometry.attributes.position.array;
+        const base = link.basePositions;
+        for (let i = 0, len = link.segmentCount * 3; i < len; i += 3) {
+          posArray[i] = base[i];
+          posArray[i + 1] = base[i + 1] + floatOffset;
+          posArray[i + 2] = base[i + 2];
+        }
+        link.line.geometry.attributes.position.needsUpdate = true;
 
-      // Regenerate curve with new start position
-      const adjustedStart = faceCenter.clone();
-      adjustedStart.y += floatOffset;
-
-      const curvePoints = this.generateVineCurve(adjustedStart, faceNormal, face);
-      link.curvePoints = curvePoints;
-      link.endPoint.copy(curvePoints[curvePoints.length - 1]);
-
-      // Update line geometry
-      const positionAttr = link.line.geometry.attributes.position;
-      for (let i = 0; i < link.segmentCount; i++) {
-        const t = i / (link.segmentCount - 1);
-        const point = this.getPointOnCurve(curvePoints, t);
-        positionAttr.setXYZ(i, point.x, point.y, point.z);
+        link.endPoint.copy(link.baseEndPoint);
+        link.endPoint.y += floatOffset;
       }
-      positionAttr.needsUpdate = true;
+
+      // Update button screen position (replaces per-face RAF loops)
+      this.updateButtonPosition(link);
     }
   }
 
