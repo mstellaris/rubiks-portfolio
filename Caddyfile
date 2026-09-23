@@ -1,0 +1,26 @@
+{
+    auto_https off
+    admin off
+}
+
+:{$PORT} {
+    root * /srv
+
+    header {
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    @immutable path /assets/*
+    header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+    @hdri path /hdri/*
+    header @hdri Cache-Control "public, max-age=604800"
+
+    @html path / *.html
+    header @html Cache-Control "public, max-age=0, must-revalidate"
+
+    encode zstd gzip
+    file_server
+}
